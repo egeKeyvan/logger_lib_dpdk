@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# Also exclude build folder for meson
+build/
+
 # Compiled Object files
 *.slo
 *.lo
