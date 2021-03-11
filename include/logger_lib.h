@@ -20,11 +20,20 @@ per_ssb_measurements empty_ssb_measurements = {0, 0, 0};
 // Structure to hold necessary data about per DRB measurements.
 // Assumption about this structure is that one DRB holds multiple cells.
 struct per_drb_measurements{
-    // Per Cell ID, Active Count
-    std::map<int, int> active_ue_count;
+    
+    uint64_t max_active_ue_count;
 
-    // Per Cell ID, Inactive Count
-    std::map<int, int> inactive_ue_count;
+    uint64_t min_active_ue_count;
+
+    uint64_t max_inactive_ue_count;
+
+    uint64_t min_inactive_ue_count;
+
+    // Accumulate Total Active UE Count to take an average
+    uint64_t total_active_ue_count;
+
+    // Accumulate Total Inactive UE Count to take an average
+    uint64_t total_inactive_ue_count;
 
     // Cell IDs
     std::vector<int> cell_ids;
@@ -101,9 +110,18 @@ class LoggerLib {
          * @param drb_id ID of the parent DRB
          * @param cell_id ID of the Cell
          * @param count Number of the UE to add
-         * @param new_ue If this is true, count will be added to current UE count. If false, same amount of UE will also be substracted from the inactive UE's.
+         * @param new_ue If this is true, count will be added to current Active UE count. If false, same amount of UE will also be substracted from the inactive UE's.
          * **/
-        bool add_new_active_ue_to_cell(int drb_id, int cell_id, uint64_t count, bool new_ue = true);
+        bool add_new_active_ue_to_cell(int drb_id, int cell_id, uint32_t count, bool new_ue = true);
+
+        /** Add new Inactive UE's to Cell contained under DRB with @param drb_id
+         * @param drb_id ID of the parent DRB
+         * @param cell_id ID of the Cell
+         * @param count Number of the UE to add
+         * @param new_ue If this is true, count will be added to current Inactive UE count. If false, same amount of UE will also be substracted from the active UE's.
+         * **/
+        bool add_new_inactive_ue_to_cell(int drb_id, int cell_id, uint32_t count, bool new_ue = true);
+
 
         // Per SSB Calculation Callback
         void per_ssb_timer_callback(__rte_unused struct rte_timer *tim, void *arg);
@@ -114,17 +132,7 @@ class LoggerLib {
         // Public Deconstructor
         ~LoggerLib();
 
-    private:
-
-    // struct sampling_rate_pair
-    // {
-    //     // ID of the metric
-    //     int id;
-
-    //     // Sampling Frequency of the Metric
-    //     int sampling_freq;
-    // };
-    
+    private:    
     // Timers to periodically sample SSB values. They are always sampled with 1sec period
     rte_timer per_ssb_timer;
 
@@ -151,10 +159,11 @@ class LoggerLib {
     // Available ID for the SSB.    
     int ssb_first_available_id;
 
-    
-
     // Previos Timer Tick Time
     int prev_tsc;
+
+    // A helper function to retrieve Active and Inactive UE's for per DRB per Cell.
+    bool get_active_inactive_ue_count(int drb_id, int cell_id, uint32_t &active_count, uint32_t &inactive_count);
 };
 
 

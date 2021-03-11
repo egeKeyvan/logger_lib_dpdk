@@ -47,6 +47,8 @@ lcore_hello(__rte_unused void *arg)
 
 	int cell_id;
 	logger->add_new_cell_to_drb(drb_id, cell_id);
+
+	logger->add_new_active_ue_to_cell(drb_id, cell_id, 20, true);
 	
 
 	while (1)
