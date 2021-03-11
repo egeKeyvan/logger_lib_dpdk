@@ -7,6 +7,9 @@ build/
 # Folder created by meson extension of VS Code
 builddir/
 
+# Exclude Path Dependent VS Code 
+.vscode/
+
 # Compiled Object files
 *.slo
 *.lo

@@ -7,11 +7,17 @@
 #define SECOND_21_MASK 0x000003FFFFE00000UL
 #define THIRD_21_MASK  0xFFFFFC0000000000UL
 
-
+#define FIRST_32_MASK  0x00000000FFFFFFFFUL
+#define LAST_32_MASK   0xFFFFFFFF00000000UL
 
 static void ssb_timer_callback(struct rte_timer *tim, void *arg){
     LoggerLib *logger = (LoggerLib *)arg;
     logger->per_ssb_timer_callback(tim, NULL);
+}
+
+static void per_drb_per_cell_callback(struct rte_timer *tim, void *arg){
+    LoggerLib *logger = (LoggerLib *)arg;
+    logger->per_drb_per_cell_timer_callback(tim, NULL);
 }
 
 LoggerLib::LoggerLib(int core_socket_id) : current_core_id(core_socket_id), ssb_first_available_id(-1){
@@ -71,7 +77,7 @@ bool LoggerLib::add_new_ssb(int &id){
     return true;
 }
 
-bool LoggerLib::update_metric_value(int metric_id, int value, bool absolute){
+bool LoggerLib::update_metric_value(int metric_id, int64_t value, bool absolute){
     return metric_handler.update_metric(metric_id, value, absolute);
 }
 
@@ -223,6 +229,35 @@ void LoggerLib::per_ssb_timer_callback(__rte_unused struct rte_timer *tim, void 
 }
 
 
+void LoggerLib::per_drb_per_cell_timer_callback(__rte_unused struct rte_timer *tim, void *arg){
+    debug_print("Per DRB Per Cell Timer Callback\n", NULL);
+}
+
+// Use the same trick to store two 32 bit numbers for active and inactive UE's. This way, we don't have to manage additional metrics and callbacks.
+// This simplifies management and also provides a more performant logging.
+bool LoggerLib::add_new_active_ue_to_cell(int drb_id, int cell_id, uint64_t count, bool new_ue = true){
+    std::map<int, per_drb_measurements>::iterator it = drb_measurement_map.find(drb_id);
+
+    if(it == drb_measurement_map.end()){
+        printf("DRB with ID %d is not found\n", drb_id);
+        return false;
+    }
+
+    if(cell_id >= it->second.cell_ids.size()){
+        printf("Cell with ID %d is not found within DRB with ID %d\n", cell_id, drb_id);
+        return false;
+    }
+
+    int cell_metric_id = it->second.cell_ids[cell_id];
+
+    if(new_ue){
+        uint64_t metric_value;
+        if(metric_handler.get_metric(cell_metric_id, metric_value)){
+
+        }
+    }
+}
+
 bool LoggerLib::add_new_drb(int &id, int ue_sample_frequency){
     struct per_drb_measurements drb;
     ue_sampling_frequency = ue_sample_frequency;
@@ -231,6 +266,7 @@ bool LoggerLib::add_new_drb(int &id, int ue_sample_frequency){
     id = drb_measurement_map.size();
 
     drb_measurement_map.insert(std::make_pair(id, empty_measurements));
+    // debug_print("A new DRB is added with ID %d\n", id);
     return true;
 }
 
@@ -244,9 +280,31 @@ bool LoggerLib::add_new_cell_to_drb(int drb_id, int &cell_id){
 
     // Use vector size again. 
     cell_id = it->second.cell_ids.size();
-    it->second.cell_ids.push_back(cell_id);
+    int cell_metric_id;
 
-    // If we have pushed a cell_id for the first time, then we need to activate the sampling to UE contexts.
+    std::string str;
+
+    str += "per_drb_per_cell_";
+    str += std::to_string(drb_id);
+    str += std::to_string(cell_id);
+
+    if(metric_handler.register_metric(str.c_str(), cell_metric_id) == true){
+        debug_print("A new per DRB per Cell metric has been created with ID: %d\n", cell_metric_id);
+        it->second.cell_ids.push_back(cell_metric_id);
+    }else{
+        printf("Per DRB Per Cell Metric Registration has failed with DRB ID %d and Cell ID %d.\n", drb_id, cell_id);
+        return false;
+    }
+    
+
+    if(cell_id == 0){
+        // If we have pushed a cell_id for the first time, then we need to activate the sampling to UE contexts.
+        rte_timer_reset(&per_drb_per_cell_measurement_timer, rte_get_timer_hz() / ue_sampling_frequency, PERIODICAL, 
+                    current_core_id, per_drb_per_cell_callback, this);
+    }
+
+    
+
     
     return true;
 }

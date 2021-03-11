@@ -74,7 +74,7 @@ class LoggerLib {
          * @param value Updated Value
          * @param absolute If this is true, metric value is set to @param value. If false, @param value is added to the current value.
          * **/
-        bool update_metric_value(int metric_id, int value, bool absolute = true);
+        bool update_metric_value(int metric_id, int64_t value, bool absolute = true);
 
 
         // Get of the Three SSB Values for given ID. These values are the message counts after last iteration.
@@ -96,8 +96,20 @@ class LoggerLib {
          * **/
         bool add_new_cell_to_drb(int drb_id, int &cell_id);
 
+
+        /** Add new Active UE's to Cell contained under DRB with @param drb_id
+         * @param drb_id ID of the parent DRB
+         * @param cell_id ID of the Cell
+         * @param count Number of the UE to add
+         * @param new_ue If this is true, count will be added to current UE count. If false, same amount of UE will also be substracted from the inactive UE's.
+         * **/
+        bool add_new_active_ue_to_cell(int drb_id, int cell_id, uint64_t count, bool new_ue = true);
+
         // Per SSB Calculation Callback
         void per_ssb_timer_callback(__rte_unused struct rte_timer *tim, void *arg);
+
+        // Per DRB Per Cell Measurement Callback
+        void per_drb_per_cell_timer_callback(__rte_unused struct rte_timer *tim, void *arg);
 
         // Public Deconstructor
         ~LoggerLib();

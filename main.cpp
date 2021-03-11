@@ -40,6 +40,13 @@ lcore_hello(__rte_unused void *arg)
 					logger->get_ssb_message_count(id, PRACH_DEDICATED), 
 						logger->get_ssb_message_count(id, PRACH_RAND_HIGH), 
 							logger->get_ssb_message_count(id, PRACH_RAND_LOW));
+
+	
+	int drb_id;
+	logger->add_new_drb(drb_id, 20);
+
+	int cell_id;
+	logger->add_new_cell_to_drb(drb_id, cell_id);
 	
 
 	while (1)

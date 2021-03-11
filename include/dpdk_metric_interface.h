@@ -15,7 +15,7 @@ class DPDKMetricInterface : public MetricInterface {
 
         bool register_metric(const char *metric_name, int &id);
 
-        bool update_metric(int metric_id, uint64_t value, bool absolute);
+        bool update_metric(int metric_id, int64_t value, bool absolute);
 
         bool get_metric(int metric_id, uint64_t &metric_value);
 

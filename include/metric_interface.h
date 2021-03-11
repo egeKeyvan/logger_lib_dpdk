@@ -19,7 +19,7 @@ class MetricInterface{
          * @param absolute: If true, metric value is set to @param value. Else value is added to current value
          * 
          * **/
-        virtual bool update_metric(int metric_id, uint64_t value, bool absolute) = 0;
+        virtual bool update_metric(int metric_id, int64_t value, bool absolute) = 0;
 
         // Get the metric value by ID.
         virtual bool get_metric(int metric_id, uint64_t &metric_value) = 0;

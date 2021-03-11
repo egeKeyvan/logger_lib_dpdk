@@ -34,7 +34,7 @@ bool DPDKMetricInterface::register_metric(const char *name_str, int &id){
 }
 
 
-bool DPDKMetricInterface::update_metric(int metric_id, uint64_t value, bool absolute){
+bool DPDKMetricInterface::update_metric(int metric_id, int64_t value, bool absolute){
     if(absolute){
         return (rte_metrics_update_value(socket_id, metric_id, value)) >= 0;
     }else{
@@ -127,9 +127,9 @@ void DPDKMetricInterface::print_metrics(){
     }
     
     printf("Metrics for port %i is %d units long\n", socket_id, len);
-    for (int i = 0; i < len; i++)
-        printf("  %s: %llu -> %d\n",
-            names[metrics[i].key].name, metrics[i].value, strlen(names[metrics[i].key].name));
+    // for (int i = 0; i < len; i++)
+    //     printf("  %s: %llu -> %zu\n",
+    //         names[metrics[i].key].name, metrics[i].value, strlen(names[metrics[i].key].name));
     //free(metrics);
     //free(names);
 }
