@@ -4,6 +4,9 @@
 # Also exclude build folder for meson
 build/
 
+# Folder created by meson extension of VS Code
+builddir/
+
 # Compiled Object files
 *.slo
 *.lo
